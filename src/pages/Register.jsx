@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
+import api from '../api/api';
+import { useNavigate } from 'react-router-dom';
 
 function Register() {
+
+    // Hook para la navegación
+    const navigate = useNavigate();
 
     // Estado local para almacenar los valores del formulario
     const [formData, setFormData] = useState({
@@ -9,6 +14,10 @@ function Register() {
       password: '',
       confirmPassword: ''
     });
+
+    // Hook para manejar el estado de error
+    const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(null);
 
     // Maneja los cambios en los inputs del formulario
     const handleChange = e => {
@@ -22,16 +31,37 @@ function Register() {
     };
 
     // Maneja el envío del formulario
-    const handleSubmit = e => {
-      e.preventDefault(); // Evita recargar la página al enviar el formulario
+  const handleSubmit = async e => {
+    e.preventDefault();
 
-      // Imprime los datos en consola (esto se reemplazará con lógica real en la Fase 3)
-      console.log('Registro enviado:', formData);
-    };
+    // Validación simple
+    if (formData.password !== formData.confirmPassword) {
+      setError("Las contraseñas no coinciden.");
+      return;
+    }
+
+    try {
+      const response = await api.post('/api/register/', {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password
+      });
+
+      setSuccess("Usuario registrado exitosamente.");
+      setError(null);
+      setTimeout(() => navigate('/login'), 1500);
+    } catch (err) {
+      console.error(err);
+      setError("Error al registrar usuario.");
+    }
+  };
 
     return (
       <div className="max-w-md mx-auto bg-white shadow-md rounded p-6 mt-8">
         <h2 className="text-2xl font-semibold mb-4">Registro</h2>
+
+        {error && <div className="text-red-500 mb-4">{error}</div>}
+        {success && <div className="text-green-500 mb-4">{success}</div>}
 
         {/* Formulario de registro */}
         <form onSubmit={handleSubmit}>

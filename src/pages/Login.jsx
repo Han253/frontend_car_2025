@@ -1,9 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 
 function Login() {
 
   // Estado local para almacenar los valores del formulario
   const [formData, setFormData] = useState({ username: '', password: '' });
+  // Estado local para manejar errores
+  const [error, setError] = useState(null);
+  // Contexto de autenticación para manejar el login
+  const { login } = useContext(AuthContext);
+  //Hook para redirigir a otras rutas
+  const navigate = useNavigate();
+
 
   // Maneja los cambios en los inputs del formulario
   const handleChange = e => {
@@ -13,15 +22,26 @@ function Login() {
   };
 
   // Maneja el envío del formulario
-  const handleSubmit = e => {
+  const handleSubmit = async  e => {
     e.preventDefault();// Previene el comportamiento por defecto del formulario (recarga)
     console.log('Datos ingresados:', formData);
     // Aquí se conectará con el backend en la Fase 3
+    try {
+      // Intenta iniciar sesión con los datos del formulario
+      await login(formData.username, formData.password);
+      navigate('/'); // Redirige al usuario si fue exitoso
+    } catch (err) {
+      // Muestra un error si las credenciales no son válidas
+      setError('Usuario o contraseña incorrectos');
+    }
   };
 
   return (
     <div className="max-w-md mx-auto bg-white shadow-md rounded p-6 mt-8">
       <h2 className="text-2xl font-semibold mb-4">Iniciar Sesión</h2>
+
+      {/* Muestra error si existe */}
+      {error && <p className="text-red-500 mb-4">{error}</p>}
 
       {/* Formulario de login */}
       <form onSubmit={handleSubmit}>

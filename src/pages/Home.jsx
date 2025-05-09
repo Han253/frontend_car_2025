@@ -1,75 +1,85 @@
+import { useState, useEffect, useContext } from 'react';
 import CarCard from '../components/CarCard';
-
-const cars = [
-  {
-    id: 6,
-    brand: "Renault",
-    model: "Koleos 2.5 Expression",
-    year: 2011,
-    price: "38000000.00",
-    mileage: 83135,
-    description: "Vendido directamente por Sanautos S.A, Concesionario Renault y Usados certificados a nivel nacional.",
-    image: "http://127.0.0.1:8000/media/car_images/Koleos.jpg",
-    city: "Bucaramanga",
-    state: "Santander"
-  },
-  {
-    id: 5,
-    brand: "Mercedes-Benz",
-    model: "Clase GLC GLC 300 E 4matic 2.0",
-    year: 2023,
-    price: "235000000.00",
-    mileage: 42800,
-    description: "Marca: Mercedes Benz- blanco polar\nModelo: GLC300 E 4matic 2.0 2023\nKm: 42.800\nCombustible: Hibrida",
-    image: "http://127.0.0.1:8000/media/car_images/Mercedes.jpg",
-    city: "Medellín",
-    state: "Antioquia"
-  },
-  {
-    id: 4,
-    brand: "Kia",
-    model: "Sportage New Sportage 2.0",
-    year: 2015,
-    price: "49900000.00",
-    mileage: 90000,
-    description: "2 Dueños, bien cuidada, papeles al día, peritaje septiembre 2024",
-    image: "http://127.0.0.1:8000/media/car_images/kia.jpg",
-    city: "Suba",
-    state: "Bogotá D.C."
-  },
-  {
-    id: 3,
-    brand: "Renault",
-    model: "Duster 1.3 Intense Cvt",
-    year: 2023,
-    price: "85000000.00",
-    mileage: 39524,
-    description: "Lista para Transpaso",
-    image: "http://127.0.0.1:8000/media/car_images/Duster.jpg",
-    city: "Bucaramanga",
-    state: "Santander"
-  },
-  {
-    id: 2,
-    brand: "Toyota",
-    model: "Hilux 2.5 INV 4x4 DIESEL",
-    year: 2015,
-    price: "95000000.00",
-    mileage: 128000,
-    description: "Lista para Transpaso",
-    image: "http://127.0.0.1:8000/media/car_images/Toyota.jpg",
-    city: "Bucaramanga",
-    state: "Santander"
-  }
-];
+import api from '../api/api';
+import { AuthContext } from '../context/AuthContext';
 
 
-function Home() {
+
+function Home({ filters }) {
+
+  // Accedemos al Tocken de acceso desde el contexto de autenticación
+  const { accessToken } = useContext(AuthContext);
+  // Definimos el estado para los autos, la carga y el error
+  const [cars, setCars] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  //Parametros de ordenamiento
+  const [sortBy, setSortBy] = useState('price'); // puedes usar "price", "year", "mileage"
+  const [sortOrder, setSortOrder] = useState('asc'); // "asc" o "desc"
+
+  // Función para ordenar los autos
+  useEffect(() => {
+    const fetchCars = async () => {
+      try {
+        const ordering = sortOrder === 'desc' ? `-${sortBy}` : sortBy;
+        const response = await api.get('/api/cars/', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          params: {
+            ordering: ordering,
+            ...filters, // Agregar filtros aquí si es necesario
+          },
+        });
+        //console.log('Autos cargados:', response.data.results);
+        setCars(response.data.results);
+        setError(null);
+      } catch (err) {
+        console.error('Error al cargar autos:', err);
+        setError('No se pudieron cargar los autos.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (accessToken) {
+      fetchCars();
+    }
+  }, [accessToken, sortBy, sortOrder, filters]);
+
+  if (loading) return <p className="text-center mt-10">Cargando autos...</p>;
+  if (error) return <p className="text-center text-red-500 mt-10">{error}</p>;
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-      {cars.map(car => (
-        <CarCard key={car.id} car={car} />
-      ))}
+    <div className="px-4">
+      {/* Filtros de ordenamiento fuera del grid */}
+      <div className="flex flex-wrap items-center justify-end mb-4 gap-2">
+        <label className="text-sm font-medium text-gray-600">Ordenar por:</label>
+        <select
+          className="p-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-200 bg-white text-gray-700"
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+        >
+          <option value="price">Precio</option>
+          <option value="year">Año</option>
+          <option value="mileage">Kilometraje</option>
+        </select>
+
+        <select
+          className="p-2 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-200 bg-white text-gray-700"
+          value={sortOrder}
+          onChange={(e) => setSortOrder(e.target.value)}
+        >
+          <option value="asc">Ascendente</option>
+          <option value="desc">Descendente</option>
+        </select>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        {cars.map(car => (
+          <CarCard key={car.id} car={car} />
+        ))}
+      </div>
     </div>
   );
 }
