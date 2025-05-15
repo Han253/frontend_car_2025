@@ -1,4 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import CarCard from '../components/CarCard';
 import api from '../api/api';
 import { AuthContext } from '../context/AuthContext';
@@ -17,6 +18,9 @@ function Home({ filters }) {
   //Parametros de ordenamiento
   const [sortBy, setSortBy] = useState('price'); // puedes usar "price", "year", "mileage"
   const [sortOrder, setSortOrder] = useState('asc'); // "asc" o "desc"
+
+  //Para navegación
+  const navigate = useNavigate();
 
   // Función para ordenar los autos
   useEffect(() => {
@@ -53,6 +57,16 @@ function Home({ filters }) {
 
   return (
     <div className="px-4">
+      {/* Encabezado y botón */}
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold text-gray-700">Listado de Autos</h2>
+        <button
+          onClick={() => navigate('/create')}
+          className="bg-green-600 text-white px-4 py-2 rounded-xl shadow hover:bg-green-700 transition"
+        >
+          + Nuevo Auto
+        </button>
+      </div>
       {/* Filtros de ordenamiento fuera del grid */}
       <div className="flex flex-wrap items-center justify-end mb-4 gap-2">
         <label className="text-sm font-medium text-gray-600">Ordenar por:</label>
